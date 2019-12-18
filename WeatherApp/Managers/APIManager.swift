@@ -23,7 +23,8 @@ final public class APIManager {
         urlComponents.host       = "api.openweathermap.org"
         urlComponents.path       = "/data/2.5/forecast"
         urlComponents.queryItems = [URLQueryItem(name: "q", value: cityName),
-                                    URLQueryItem(name: "APPID", value: "ca47aa9c2b8fb3f74080e1ded2775ca8")]
+                                    URLQueryItem(name: "APPID", value: "ca47aa9c2b8fb3f74080e1ded2775ca8"),
+                                    URLQueryItem(name: "lang", value: "ru")]
         guard let url = urlComponents.url else { return }
         
         request(url).validate().responseData() { response in

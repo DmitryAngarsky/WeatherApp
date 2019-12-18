@@ -7,28 +7,46 @@
 //
 
 import Foundation
+import RealmSwift
 
-class Forecast: Codable {
+class Forecast: Object, Codable {
     
-    var code: String?
-    var list: [DataForecast]?
-    var city: City?
+    @objc dynamic var cod: String = ""
+    @objc dynamic var city: City?
+    @objc dynamic var cityName: String?
+    var list = List<DataForecast>()
+    
+    override class func primaryKey() -> String? {
+        return "cityName"
+    }
 }
 
-class DataForecast: Codable {
+class City: Object, Codable {
     
-    var dt: Double?
-    var main: Main?
+    @objc dynamic var name = ""
+    @objc dynamic var country = ""
+    @objc dynamic var timezone: Int = 0
 }
 
-class Main: Codable {
+class DataForecast: Object, Codable {
     
-    var temp: Float?
+    @objc dynamic var dt: Int = 0
+    @objc dynamic var main: Main?
+    var weather = List<Weather>()
 }
 
-class City: Codable {
+class Main: Object, Codable {
     
-    var name: String = ""
-    var country: String = ""
-    var timezone: Int?
+    @objc dynamic var temp: Double = 0
+}
+
+class Weather: Object, Codable {
+    
+    @objc dynamic var weatherDescription = ""
+    @objc dynamic var id = 0
+    
+    private enum CodingKeys : String, CodingKey {
+        case weatherDescription = "description"
+        case id = "id"
+    }
 }
