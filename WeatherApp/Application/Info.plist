@@ -10,7 +10,7 @@
 		<true/>
 		<key>NSExceptionDomains</key>
 		<dict>
-			<key>http://api.openweathermap.org</key>
+			<key>api.openweathermap.org</key>
 			<dict/>
 			<key>NSExceptionAllowsInsecureHTTPLoads</key>
 			<true/>

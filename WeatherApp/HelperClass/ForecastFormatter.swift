@@ -58,7 +58,7 @@ class ForecastFormatter {
             
             let currentDate = Date()
             guard let timeOfDay = Int(dateFormatter.string(from: currentDate)) else { return ""}
-            print(Int(dateFormatter.string(from: currentDate)))
+            
             switch timeOfDay {
             case 0..<6:
                 return "DarkBlueWeatherBackground"

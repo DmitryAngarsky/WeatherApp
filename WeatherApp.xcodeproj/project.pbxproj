@@ -85,6 +85,15 @@
 			path = Model;
 			sourceTree = "<group>";
 		};
+		CE50E8C423AFE3E40071C224 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				CE5BEEEE23A54A300006CACF /* DailyForecastTableViewCell.xib */,
+				CED980B023967A3A002EF9E2 /* Main.storyboard */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
 		CE6E942923A7FC74001A5AFE /* HelperClass */ = {
 			isa = PBXGroup;
 			children = (
@@ -121,7 +130,7 @@
 				CE3C1DA1239696B9000A30F1 /* Model */,
 				CE6E942923A7FC74001A5AFE /* HelperClass */,
 				CED980C723968189002EF9E2 /* ViewControllers */,
-				CED980B023967A3A002EF9E2 /* Main.storyboard */,
+				CE50E8C423AFE3E40071C224 /* View */,
 			);
 			path = WeatherApp;
 			sourceTree = "<group>";
@@ -153,7 +162,6 @@
 				CED980AE23967A3A002EF9E2 /* MainViewController.swift */,
 				CE87B7D423AA8001000804C8 /* SearchCityViewController.swift */,
 				CE5BEEED23A54A300006CACF /* DailyForecastTableViewCell.swift */,
-				CE5BEEEE23A54A300006CACF /* DailyForecastTableViewCell.xib */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";

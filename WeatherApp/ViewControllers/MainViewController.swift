@@ -71,6 +71,12 @@ class MainViewController: UITableViewController, CLLocationManagerDelegate {
     //MARK: -RequestErrorHandling Method
     func requestErrorHandling(_ error: String) {
         
+        var errorMassage = error
+        
+        if error == "The operation couldn’t be completed. (kCLErrorDomain error 0.)" {
+            errorMassage = "Не удалось определить ваше местоположение, пожалуйста проверьте настройки сети"
+        }
+        
         if forecast == nil {
             
             viewHiddingTableView.isHidden = false
@@ -88,7 +94,7 @@ class MainViewController: UITableViewController, CLLocationManagerDelegate {
         }
         
         let actionSheet = UIAlertController(title: "Ошибка",
-                                            message: "\(error)",
+                                            message: "\(errorMassage)",
                                             preferredStyle: .alert)
         let okeyAction = UIAlertAction(title: "OK",
                                        style: .default,
@@ -209,5 +215,10 @@ extension MainViewController: SearchCityViewControllerDelegate {
                     }
             }
         }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print(error.localizedDescription)
+        requestErrorHandling(error.localizedDescription)
     }
 }
