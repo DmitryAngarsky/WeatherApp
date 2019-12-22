@@ -11,7 +11,6 @@ import RealmSwift
 
 class Forecast: Object, Codable {
     
-    @objc dynamic var cod: String = ""
     @objc dynamic var city: City?
     @objc dynamic var cityName: String?
     var list = List<DataForecast>()

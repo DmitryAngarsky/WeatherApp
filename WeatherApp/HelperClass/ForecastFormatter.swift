@@ -18,6 +18,7 @@ enum DateFormat: String {
     
     case weekday = "EEEE"
     case monthDay = "MMMMd"
+    case timeOfDay = "HH"
 }
 
 class ForecastFormatter {
@@ -51,6 +52,25 @@ class ForecastFormatter {
         
         if calendar.isDateInTomorrow(date) && dateFormat == .weekday {
             return "Завтра"
+        }
+        
+        if dateFormat == .timeOfDay {
+            
+            let currentDate = Date()
+            guard let timeOfDay = Int(dateFormatter.string(from: currentDate)) else { return ""}
+            print(Int(dateFormatter.string(from: currentDate)))
+            switch timeOfDay {
+            case 0..<6:
+                return "DarkBlueWeatherBackground"
+            case 6..<12:
+                return "LightBlueWeatherBackground"
+            case 12..<18:
+                return "BlueWeatherBackground"
+            case 18..<24:
+                return "OrangeWeatherBackground"
+            default:
+                break
+            }
         }
         
         return dateFormatter.string(from: date).firstUppercased

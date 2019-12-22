@@ -9,7 +9,7 @@
 import UIKit
 
 protocol SearchCityViewControllerDelegate: class {
-    func sendCityName(_ text: String)
+    func sendCityName(_ name: String)
 }
 
 class SearchCityViewController: UIViewController, UISearchBarDelegate {
