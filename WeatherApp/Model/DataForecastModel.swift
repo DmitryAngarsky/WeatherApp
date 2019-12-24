@@ -1,0 +1,17 @@
+//
+//  DataForecastModel.swift
+//  WeatherApp
+//
+//  Created by Дмитрий Тараканов on 23.12.2019.
+//  Copyright © 2019 Dmitry Angarsky. All rights reserved.
+//
+
+import Foundation
+import RealmSwift
+
+class DataForecast: Object, Codable {
+    
+    @objc dynamic var dt: Int = 0
+    @objc dynamic var main: Main?
+    var weather = List<Weather>()
+}

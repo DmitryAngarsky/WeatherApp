@@ -16,17 +16,17 @@ class MainViewController: UITableViewController, CLLocationManagerDelegate {
     @IBOutlet weak var currentTemperatureDescriptionLabel: UILabel!
     @IBOutlet weak var backgroundImageView: UIImageView!
     
-    let cityName = "London"
     let userDefaultsKey = "lastCityName"
 
     var forecast: Forecast? {
         return StorageManager.realm.object(ofType: Forecast.self,
                                            forPrimaryKey: UserDefaults.standard.string(forKey: self.userDefaultsKey))
     }
-    var location: CLLocationCoordinate2D?
+    
     let locationManager = CLLocationManager()
     let spinner = UIActivityIndicatorView(style: .large)
     let dailyForecastTableViewCell = "DailyForecastTableViewCell"
+    
     let cityImageOnRequestError = UIImage(named: "City")
     let cityImageViewOnRequestError = UIImageView()
     let viewHiddingTableView = UIView()
@@ -69,13 +69,7 @@ class MainViewController: UITableViewController, CLLocationManagerDelegate {
         locationManager.startUpdatingLocation()
     }
     //MARK: -RequestErrorHandling Method
-    func requestErrorHandling(_ error: String) {
-        
-        var errorMassage = error
-        
-        if error == "The operation couldn’t be completed. (kCLErrorDomain error 0.)" {
-            errorMassage = "Не удалось определить ваше местоположение, пожалуйста проверьте настройки сети"
-        }
+    func requestErrorHandling(_ error: Error) {
         
         if forecast == nil {
             
@@ -90,11 +84,11 @@ class MainViewController: UITableViewController, CLLocationManagerDelegate {
             requestResultIsHidden(false)
             self.navigationItem.title = forecast?.city?.name
             self.currentTemperatureLabel.text = forecastFormatter.temperatureConfigure()
-            self.currentTemperatureDescriptionLabel.text = self.forecast?.list.first?.weather.first?.weatherDescription.firstUppercased
+            self.currentTemperatureDescriptionLabel.text = self.forecast?.list.first?.weather.first?.weatherDescription.capitalized
         }
         
         let actionSheet = UIAlertController(title: "Ошибка",
-                                            message: "\(errorMassage)",
+                                            message: "\(error.localizedDescription)",
                                             preferredStyle: .alert)
         let okeyAction = UIAlertAction(title: "OK",
                                        style: .default,
@@ -105,42 +99,39 @@ class MainViewController: UITableViewController, CLLocationManagerDelegate {
     }
     //MARK: -UpdateData Method
     func updateData(_ result: Forecast) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) {
-            
-            let dailyForecast = DailyForecast(result)
-            let forecastFormatter = ForecastFormatter(result.city?.timezone ?? 0,
-                                                      Double(result.list.first?.dt ?? 0),
-                                                      result.list.first?.main?.temp ?? 0)
-            UserDefaults.standard.set(result.city?.name ?? "",
-                                      forKey: self.userDefaultsKey)
-            UserDefaults.standard.synchronize()
-            
-            StorageManager.updateDB(dailyForecast.getDailyForecast())
-            self.requestResultIsHidden(false)
-            self.backgroundImageView.image = UIImage(named: forecastFormatter.dateConfigure(.timeOfDay))
-            self.navigationItem.title = result.city?.name
-            self.currentTemperatureLabel.text = forecastFormatter.temperatureConfigure()
-            self.currentTemperatureDescriptionLabel.text = self.forecast?.list.first?.weather.first?.weatherDescription.firstUppercased
-            
-            self.tableView.reloadData()
-        }
+        let dailyForecast = DailyForecast(result)
+        let forecastFormatter = ForecastFormatter(result.city?.timezone ?? 0,
+                                                  Double(result.list.first?.dt ?? 0),
+                                                  result.list.first?.main?.temp ?? 0)
+        UserDefaults.standard.set(result.city?.name ?? "",
+                                  forKey: self.userDefaultsKey)
+        UserDefaults.standard.synchronize()
+        
+        StorageManager.updateDB(dailyForecast.getDailyForecast())
+        requestResultIsHidden(false)
+        backgroundImageView.image = UIImage(named: forecastFormatter.backgroundImageConfigure())
+        navigationItem.title = result.city?.name
+        currentTemperatureLabel.text = forecastFormatter.temperatureConfigure()
+        currentTemperatureDescriptionLabel.text = forecast?.list.first?.weather.first?.weatherDescription.capitalized
+        
+        self.tableView.reloadData()
     }
     //MARK: -Method Hidding Results Of Request
     func requestResultIsHidden(_ isHidden: Bool) {
         switch isHidden {
         case true:
             navigationItem.title = "Загрузка..."
-            currentTemperatureLabel.isHidden = true
-            currentTemperatureDescriptionLabel.isHidden = true
-            cityImageViewOnRequestError.isHidden = true
-            viewHiddingTableView.isHidden = false
+            currentTemperatureLabel.isHidden = isHidden
+            currentTemperatureDescriptionLabel.isHidden = isHidden
+            cityImageViewOnRequestError.isHidden = isHidden
+            viewHiddingTableView.isHidden = isHidden
             spinner.startAnimating()
         case false:
-            currentTemperatureLabel.isHidden = false
-            currentTemperatureDescriptionLabel.isHidden = false
-            viewHiddingTableView.isHidden = true
+            currentTemperatureLabel.isHidden = isHidden
+            currentTemperatureDescriptionLabel.isHidden = isHidden
+            viewHiddingTableView.isHidden = !isHidden
             spinner.stopAnimating()
-            spinner.isHidden = true
+            spinner.isHidden = !isHidden
         }
     }
     
@@ -161,7 +152,7 @@ class MainViewController: UITableViewController, CLLocationManagerDelegate {
         cell.weekDayLabel.text = formatter.dateConfigure(.weekday)
         cell.temperatureLabel.text = formatter.temperatureConfigure()
         
-        if cell.weekDayLabel.text == "Суббота" || cell.weekDayLabel.text == "Воскресенье" {
+        if formatter.calendar.isDateInWeekend(formatter.date) {
             cell.weekDayLabel.textColor = UIColor.red
         } else {
             cell.weekDayLabel.textColor = UIColor.black
@@ -176,8 +167,8 @@ extension MainViewController: SearchCityViewControllerDelegate {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
-        if let dest = segue.destination as? SearchCityViewController {
-            dest.delegate = self
+        if let destination = segue.destination as? SearchCityViewController {
+            destination.delegate = self
         }
     }
     
@@ -185,13 +176,15 @@ extension MainViewController: SearchCityViewControllerDelegate {
         
         requestResultIsHidden(true)
         
-        APIManager.shared.getForecast(params: RequestParameters.cityName(name: name).params)
-        { [weak self] (result : Forecast?, error: String?) in
-                if let error = error {
-                    self?.requestErrorHandling(error)
-                } else if let result = result {
-                    self?.updateData(result)
-                }
+        let manager = APIManager<WeatherService>()
+        manager.getForecast(service: .cityName(name: name))
+        { [weak self] (result: Result<Forecast, Error>) -> Void in
+            switch result {
+            case .success(let result):
+                self?.updateData(result)
+            case .failure(let error):
+                self?.requestErrorHandling(error)
+            }
         }
     }
     
@@ -205,20 +198,22 @@ extension MainViewController: SearchCityViewControllerDelegate {
             locationManager.stopUpdatingLocation()
             let coordinates = CLLocationCoordinate2DMake(currentLocation.coordinate.latitude,
                                                          currentLocation.coordinate.longitude)
-            location = coordinates
-            APIManager.shared.getForecast(params: RequestParameters.location(location: coordinates).params)
-            { [weak self] (result : Forecast?, error: String?) in
-                    if let error = error {
-                        self?.requestErrorHandling(error)
-                    } else if let result = result {
-                        self?.updateData(result)
-                    }
+            
+            let manager = APIManager<WeatherService>()
+            manager.getForecast(service: .location(location: coordinates))
+            { [weak self] (result: Result<Forecast, Error>) -> Void in
+                switch result {
+                case .success(let result):
+                    self?.updateData(result)
+                case .failure(let error):
+                    self?.requestErrorHandling(error)
+                }
             }
         }
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print(error.localizedDescription)
-        requestErrorHandling(error.localizedDescription)
+        requestErrorHandling(error)
     }
 }

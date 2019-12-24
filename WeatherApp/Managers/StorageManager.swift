@@ -9,22 +9,19 @@
 import Foundation
 import RealmSwift
 
-
-
 enum fileName: String {
-    case example = "WeatherDays.realme"
+    case weatherCache = "WeatherDays.realme"
 }
 
 class StorageManager {
     
     static let realm = launchRealm(realmConfiguration())
-    static var realmPathForecast = StorageManager.realm.objects(Forecast.self)
     private static var fileManager = FileManager.default
     
     private static func realmConfiguration() -> Realm.Configuration {
         
         let filePath = StorageManager.fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        let realmURL = filePath.appendingPathComponent(fileName.example.rawValue, isDirectory: false)
+        let realmURL = filePath.appendingPathComponent(fileName.weatherCache.rawValue, isDirectory: false)
         
         return Realm.Configuration(fileURL: realmURL, schemaVersion: 4)
     }
@@ -42,25 +39,13 @@ class StorageManager {
         return realm!
     }
     
-    static func updateDB(_ dataFromServer: Forecast) {
-        
-//        deleteAll()
-        guard let cityName = dataFromServer.city?.name else { return }
-        dataFromServer.cityName = cityName
-
-        if !realmPathForecast.compactMap({$0.cityName}).contains(dataFromServer.cityName) {
-
-            try! realm.write {
-
-                realm.add(dataFromServer)
+    static func addData<T: Object>(_ object: T) {
+        do {
+            try realm.write {
+                realm.add(object)
             }
-        } else {
-            try! realm.write {
-
-                guard let currentCityList = StorageManager.realm.object(ofType: Forecast.self, forPrimaryKey: dataFromServer.cityName)?.list else { return }
-                realm.delete(currentCityList, cascading: true)
-                realm.create(Forecast.self, value: ["cityName": dataFromServer.cityName!, "list": dataFromServer.list], update: .all)
-            }
+        } catch (let error) {
+            print(error.localizedDescription)
         }
     }
     
